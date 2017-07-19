@@ -1,11 +1,11 @@
 @@whitespace :: /[\t ]+/
 
 block = "<" { in+:topic }+ { out+:outline } ;
-outline = "\n>" topic:topic body:value [ reply:topic ] ;
-topic = /[^\s(),]+/ ;
+outline = "\n>" topic:topic [ body:value [ reply:topic ] ] ;
+topic = /[^\s(),@&]+/ ;
 value = string | int | float | tuple | constant;
 tuple = '(' tuple:','.{ value } ')' ;
-string = '"' string:/[^"]*/ '"' | "'" /[^']*/ "'" ;
+string = '"' string:/[^"]*/ '"' | "'" string:/[^']*/ "'" ;
 int = int:/-?\d+/ ;
 float = float:/-?[0-9]+(\.[0-9]+)?/ ;
-constant = '@' ;
+constant = '@' | '&' | topic;
