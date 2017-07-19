@@ -3,31 +3,33 @@ from collections import deque, defaultdict
 from parser import parse_file
 from stdB import register as stdB
 
+
+def evaluate(ast_val, body):
+    if type(ast_val) == str:
+        return body
+    type_ = [*ast_val.keys()][0]
+    if type_ == 'int':
+        return int(ast_val['int'])
+    elif type_ == 'float':
+        return float(ast_val['float'])
+    elif type_ == 'string':
+        return ast_val['string']
+    elif type_ == 'tuple':
+        return tuple([evaluate(element, body) for element in ast_val['tuple']])
+    raise RuntimeError()
+
+
 class Basil:
     def __init__(self):
         self.Q = set()
         self.listeners = defaultdict(list)
         stdB(self.listeners)
 
-    def evaluate(self, ast_val, body):
-        if type(ast_val) == str:
-            return body
-        type_ = [*ast_val.keys()][0]
-        if type_ == 'int':
-            return int(ast_val['int'])
-        elif type_ == 'float':
-            return float(ast_val['float'])
-        elif type_ == 'string':
-            return ast_val['string']
-        elif type_ == 'tuple':
-            return tuple([self.evaluate(element, body) for element in ast_val['tuple']])
-        raise RuntimeError()
-
     def do(self, listener, topic, body, ID):
         """Process a non-native actor"""
         for out in listener:
             topic = out['topic']
-            eval_body = self.evaluate(out['body'], body)
+            eval_body = evaluate(out['body'], body)
             reply = out['reply']
             self.send(topic, eval_body, reply)
 

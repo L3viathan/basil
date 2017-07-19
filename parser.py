@@ -5,6 +5,7 @@ with open("grammar") as f:
 
 model = tco(g)
 
+
 def parse_file(filename):
     with open(filename) as f:
         code = f.read()
