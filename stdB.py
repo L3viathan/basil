@@ -22,23 +22,25 @@ def _stdlib(self, topic, body, ID):
     elif topic % "str":
         self.send(ID, float(body))
     elif topic % "<":
-        self.send(ID, body[0] < body[1])
+        self.send(ID, (body[0] < body[1], *body[2:]))
     elif topic % ">":
-        self.send(ID, body[0] > body[1])
+        self.send(ID, (body[0] > body[1], *body[2:]))
     elif topic % "==":
-        self.send(ID, body[0] == body[1])
+        self.send(ID, (body[0] == body[1], *body[2:]))
     elif topic % "!=":
-        self.send(ID, body[0] != body[1])
+        self.send(ID, (body[0] != body[1], *body[2:]))
     elif topic % "<=":
-        self.send(ID, body[0] <= body[1])
+        self.send(ID, (body[0] <= body[1], *body[2:]))
     elif topic % ">=":
-        self.send(ID, body[0] >= body[1])
+        self.send(ID, (body[0] >= body[1], *body[2:]))
     elif topic % "?":
-        cond, one, two = body
+        cond, one, two, *rest = body
+        while isinstance(cond, tuple):
+            cond = cond[0]
         if cond:
-            self.send(one, body)
+            self.send(one, tuple(rest))
         else:
-            self.send(two, body)
+            self.send(two, tuple(rest))
     elif topic % "err":
         print("ERROR:", body, file=sys.stderr)
         sys.exit(1)
@@ -48,6 +50,8 @@ def _stdlib(self, topic, body, ID):
         self.send(ID, body[0] - body[1])
     elif topic % "*":
         self.send(ID, body[0] * body[1])
+    elif topic % "index":
+        self.send(ID, body[0][body[1]])
     elif topic % 'accu':
         """Summary, if order is not guaranteed, solutions:
 
@@ -106,5 +110,6 @@ def register(d):
             "*",
             "err",
             "accu",
+            "index",
             ]:
         d[Literal(topic)].append(_stdlib)
