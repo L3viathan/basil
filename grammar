@@ -2,7 +2,7 @@
 
 block = "<" { in+:topic }+ { out+:outline } ;
 outline = "\n>" topic:topic [ body:value [ reply:topic ] ] ;
-topic = /[^\s(),@&]+/ ;
+topic = /[^\s(),@]+/ ;
 value = string | int | float | tuple | constant;
 tuple = '(' tuple:','.{ value } ')' ;
 string = '"' string:/[^"]*/ '"' | "'" string:/[^']*/ "'" ;

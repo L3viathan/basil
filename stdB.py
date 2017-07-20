@@ -1,5 +1,6 @@
 import sys
 from collections import defaultdict
+from datastructures import Literal
 
 
 o_accumulate = defaultdict(dict)
@@ -106,4 +107,4 @@ def register(d):
             "err",
             "accu",
             ]:
-        d[topic].append(_stdlib)
+        d[Literal(topic)].append(_stdlib)

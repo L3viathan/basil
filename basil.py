@@ -3,6 +3,7 @@ import random
 from collections import defaultdict
 from parser import parse_file
 from stdB import register as stdB
+from datastructures import Literal, Queue
 
 
 def evaluate(ast_val, body, ID):
@@ -28,44 +29,6 @@ def evaluate(ast_val, body, ID):
     raise RuntimeError()
 
 
-class Literal:
-    def __init__(self, name):
-        self.name = name
-    def __repr__(self):
-        return '<' + self.name + '>'
-    def __mod__(self, other):
-        return self.name == other
-    def __hash__(self):
-        return hash(self.name) ^ hash("literal")
-    def __eq__(self, other):
-        if isinstance(other, Literal):
-            return other.name == self.name
-        return False
-
-
-class Queue(list):
-    """Self-shuffling list"""
-    def __init__(self):
-        self.i = 0
-        self.c = 0
-    def append(self, element):
-        super().append(element)
-        self.i += 1
-        self.c += 1
-        if self.i > self.c and len(self)>2:
-            # print("Shuffled")
-            random.shuffle(self)
-            self.i = 0
-    def pop(self):
-        self.c -= 1
-        self.i += 1
-        if self.i > self.c and len(self)>2:
-            # print("Shuffled")
-            random.shuffle(self)
-            self.i = 0
-        return super().pop()
-
-
 class Basil:
     def __init__(self):
         self.Q = Queue()
@@ -75,9 +38,9 @@ class Basil:
     def do(self, listener, topic, body, ID):
         """Process a non-native actor"""
         for out in listener:
-            topic = Literal(out['topic'])
+            topic = evaluate(out['topic'], body, ID)
             eval_body = evaluate(out['body'], body, ID)
-            reply = Literal(out['reply'])
+            reply = evaluate(out['reply'], body, ID)
             self.send(topic, eval_body, reply)
 
     def send(self, topic, body, reply=None):
@@ -87,7 +50,7 @@ class Basil:
         self.Q.append((Literal('main'), None, None))
         while self.Q:
             topic, body, ID = self.Q.pop()
-            for listener in self.listeners[topic.name]:
+            for listener in self.listeners[topic]:
                 if callable(listener):
                     listener(self, topic, body, ID)
                 else:
@@ -97,5 +60,5 @@ class Basil:
 bzl = Basil()
 for topiclist, actor in parse_file(sys.argv[1]):
     for topic in topiclist:
-        bzl.listeners[topic].append(actor)
+        bzl.listeners[Literal(topic)].append(actor)
 bzl.run()
