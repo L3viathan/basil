@@ -16,7 +16,7 @@ def evaluate(ast_val, body, ID):
         else:  # literal
             return Literal(ast_val)
     elif ast_val is None:
-        return None
+        return Literal("")
     type_ = [*ast_val.keys()][0]
     if type_ == 'int':
         return int(ast_val['int'])
@@ -43,11 +43,11 @@ class Basil:
             reply = evaluate(out['reply'], body, ID)
             self.send(topic, eval_body, reply)
 
-    def send(self, topic, body, reply=None):
+    def send(self, topic, body, reply=Literal("")):
         self.Q.append((topic, body, reply))
 
     def run(self):
-        self.Q.append((Literal('main'), None, None))
+        self.Q.append((Literal('main'), Literal(""), Literal("")))
         while self.Q:
             topic, body, ID = self.Q.pop()
             for listener in self.listeners[topic]:
