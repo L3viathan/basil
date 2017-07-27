@@ -23,7 +23,7 @@ class Basil:
                 self.Q.append(msg)
 
     def send(self, topic, body, reply=Atom("")):
-        msg = Message(topic, body, reply)
+        msg = Message.make_manually(topic, body, reply)
         self.Q.append(msg)
 
     def run(self):

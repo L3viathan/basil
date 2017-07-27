@@ -9,7 +9,7 @@ u_accumulate = defaultdict(list)
 
 def _stdlib(self, msg):
     if msg.topic % "cat":
-        self.send(msg.reply, "".join(body))
+        self.send(msg.reply, "".join(msg.body))
     elif msg.topic % "print":
         print(msg.body)
     elif msg.topic % "read":

@@ -30,6 +30,8 @@ def evaluate(something, cmessage):
             return int(not e1)
         elif op == '=':
             return int(e1 == e2)
+        elif op == '<':
+            return int(e1 < e2)
         else:
             raise RuntimeError("Unknown operation:", op)
     elif isinstance(something, Atom):
@@ -57,6 +59,9 @@ class Message:
     @classmethod
     def make_main(cls):
         return Message({'topic': Atom('main'), 'reply': Atom(''), 'body': Atom('')})
+    @classmethod
+    def make_manually(cls, topic, body, reply):
+        return Message({'topic': topic, 'reply': reply, 'body': body})
 
 
 class Statement:
@@ -66,7 +71,7 @@ class Statement:
         self.action2 = action2
     def message(self, cmessage=None):
         # evaluate
-        print("Evaluating", self)
+        # print("Evaluating", self)
         if self.condition == Atom("") or evaluate(self.condition, cmessage):
             return Message(self.action1, cmessage)
         elif self.action2:
@@ -98,7 +103,7 @@ class Bag(list):
         self.i = 0
         self.c = 0
     def append(self, element):
-        print("Adding", element)
+        # print("Adding", element)
         if element is None:
             assert False
         super().append(element)
