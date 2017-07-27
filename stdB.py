@@ -1,98 +1,51 @@
 import sys
 from collections import defaultdict
-from datastructures import Literal
+from datastructures import Atom, Message
 
 
 o_accumulate = defaultdict(dict)
 u_accumulate = defaultdict(list)
 
 
-def _stdlib(self, topic, body, ID):
-    if topic % "cat":
-        self.send(ID, "".join(body))
-    elif topic % "print":
-        print(body if body is not None else "")
-    elif topic % "read":
-        i = input(body if body is not None else "")
-        self.send(ID, i)
-    elif topic % "int":
-        self.send(ID, int(body))
-    elif topic % "float":
-        self.send(ID, float(body))
-    elif topic % "str":
-        self.send(ID, float(body))
-    elif topic % "<":
-        self.send(ID, (int(body[0] < body[1]), *body[2:]))
-    elif topic % ">":
-        self.send(ID, (int(body[0] > body[1]), *body[2:]))
-    elif topic % "==":
-        self.send(ID, (int(body[0] == body[1]), *body[2:]))
-    elif topic % "!=":
-        self.send(ID, (int(body[0] != body[1]), *body[2:]))
-    elif topic % "<=":
-        self.send(ID, (int(body[0] <= body[1]), *body[2:]))
-    elif topic % ">=":
-        self.send(ID, (int(body[0] >= body[1]), *body[2:]))
-    elif topic % "?":
-        cond, one, two, *rest = body
-        while isinstance(cond, tuple):
-            cond = cond[0]
-        if cond:
-            self.send(one, tuple(rest) if rest else Literal(""))
-        else:
-            self.send(two, tuple(rest) if rest else Literal(""))
-    elif topic % "err":
-        print("ERROR:", body, file=sys.stderr)
+def _stdlib(self, msg):
+    if msg.topic % "cat":
+        self.send(msg.reply, "".join(body))
+    elif msg.topic % "print":
+        print(msg.body)
+    elif msg.topic % "read":
+        i = input(msg.body)
+        self.send(msg.reply, i)
+    elif msg.topic % "int":
+        self.send(msg.reply, int(msg.body))
+    elif msg.topic % "float":
+        self.send(msg.reply, float(msg.body))
+    elif msg.topic % "str":
+        self.send(msg.reply, float(msg.body))
+    elif msg.topic % "err":
+        print("ERROR:", msg.body, file=sys.stderr)
         sys.exit(1)
-    elif topic % "+":
-        self.send(ID, body[0] + body[1])
-    elif topic % "-":
-        self.send(ID, body[0] - body[1])
-    elif topic % "*":
-        self.send(ID, body[0] * body[1])
-    elif topic % "index":
-        x = body[0]
-        for i in body[1:]:
+    elif msg.topic % "index":
+        x = msg.body[0]
+        for i in msg.body[1:]:
             x = x[i]
-        self.send(ID, x)
-    elif topic % 'accu':
-        """Summary, if order is not guaranteed, solutions:
-
-        1. Send an index. accu caches even unknowns.
-        2. Random order tuples. accu caches even unknowns.
-        3. Do pairs. Effectively identical to 1, just implicitly
-
-        1 and 2 need setup messages (that specify length), 3 sort of does, but
-        that is obvious.
-
-        Another solution to that problem would be that _every_ message contains
-        the length, too. That is equivalent to only sending setup messages.
-        This is applicable to both 1 and 2.
-
-        The decision for now is:
-        Both 1 and 2 are implemented. 3 is not implemented (but is
-        user-definable in a straightforward way). There is no setup message,
-        instead, every message contains the length. There is no different topic
-        for 1 and 2, instead it is determined by tuple length:
-
-        (element, length) vs. (element, length, index)
-        """
-        if len(body) == 2:  # unordered
-            element, length = body
-            u_accumulate[ID].append(element)
-            if len(u_accumulate[ID]) >= length:
-                self.send(ID, tuple(u_accumulate[ID]))
-                u_accumulate[ID].clear()
-        elif len(body) == 3:  # ordered
-            element, length, index = body
-            o_accumulate[ID][index] = element
-            if len(o_accumulate[ID]) >= length:
+        self.send(msg.reply, x)
+    elif msg.topic % 'accu':
+        if len(msg.body) == 2:  # unordered
+            element, length = msg.body
+            u_accumulate[msg.reply].append(element)
+            if len(u_accumulate[msg.reply]) >= length:
+                self.send(msg.reply, tuple(u_accumulate[ID]))
+                u_accumulate[msg.reply].clear()
+        elif len(msg.body) == 3:  # ordered
+            element, length, index = msg.body
+            o_accumulate[msg.reply][index] = element
+            if len(o_accumulate[msg.reply]) >= length:
                 self.send(
-                        ID,
-                        (tuple(o_accumulate[ID][key] for key in
-                            sorted(o_accumulate[ID]))),
+                        msg.reply,
+                        (tuple(o_accumulate[msg.reply][key] for key in
+                            sorted(o_accumulate[msg.reply]))),
                         )
-                o_accumulate[ID].clear()
+                o_accumulate[msg.reply].clear()
 
 
 def register(d):
@@ -101,18 +54,8 @@ def register(d):
             "print",
             "read",
             "int",
-            "<",
-            ">",
-            "==",
-            "!=",
-            "<=",
-            ">=",
-            "?",
-            "+",
-            "-",
-            "*",
             "err",
             "accu",
             "index",
             ]:
-        d[Literal(topic)].append(_stdlib)
+        d[Atom(topic)].append(_stdlib)

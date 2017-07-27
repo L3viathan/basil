@@ -1,64 +1,41 @@
 import sys
 import random
 from collections import defaultdict
-from parser import parse_file
-from stdB import register as stdB
-from datastructures import Literal, Queue
-
-
-def evaluate(ast_val, body, ID):
-    # constant:
-    if type(ast_val) == str:
-        if ast_val == '@':
-            return body
-        elif ast_val == '&':
-            return ID
-        else:  # literal
-            return Literal(ast_val)
-    elif ast_val is None:
-        return Literal("")
-    type_ = [*ast_val.keys()][0]
-    if type_ == 'int':
-        return int(ast_val['int'])
-    elif type_ == 'float':
-        return float(ast_val['float'])
-    elif type_ == 'string':
-        return ast_val['string']
-    elif type_ == 'tuple':
-        return tuple([evaluate(element, body, ID) for element in ast_val['tuple']])
-    raise RuntimeError()
+from parseit import parse_file
+from datastructures import Bag, Atom, Message
+from stdB import register
 
 
 class Basil:
-    def __init__(self):
-        self.Q = Queue()
+    def __init__(self, filename):
+        self.Q = Bag()
         self.listeners = defaultdict(list)
-        stdB(self.listeners)
+        register(self.listeners)
+        for block in parse_file(filename):
+            for trigger in block['triggers']:
+                self.listeners[trigger].append(block['statements'])
 
-    def do(self, listener, topic, body, ID):
+    def do(self, listener, cmessage):
         """Process a non-native actor"""
-        for out in listener:
-            topic = evaluate(out['topic'], body, ID)
-            eval_body = evaluate(out['body'], body, ID)
-            reply = evaluate(out['reply'], body, ID)
-            self.send(topic, eval_body, reply)
+        for statement in listener:
+            msg = statement.message(cmessage)
+            if msg is not None:
+                self.Q.append(msg)
 
-    def send(self, topic, body, reply=Literal("")):
-        self.Q.append((topic, body, reply))
+    def send(self, topic, body, reply=Atom("")):
+        msg = Message(topic, body, reply)
+        self.Q.append(msg)
 
     def run(self):
-        self.Q.append((Literal('main'), Literal(""), Literal("")))
+        self.Q.append(Message.make_main())
         while self.Q:
-            topic, body, ID = self.Q.pop()
-            for listener in self.listeners[topic]:
+            msg = self.Q.pop()
+            for listener in self.listeners[msg.topic]:
                 if callable(listener):
-                    listener(self, topic, body, ID)
+                    listener(self, msg)
                 else:
-                    self.do(listener, topic, body, ID)
+                    self.do(listener, msg)
 
 
-bzl = Basil()
-for topiclist, actor in parse_file(sys.argv[1]):
-    for topic in topiclist:
-        bzl.listeners[Literal(topic)].append(actor)
+bzl = Basil(sys.argv[1])
 bzl.run()
