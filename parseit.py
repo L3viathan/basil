@@ -1,7 +1,7 @@
 import re
 from datastructures import Atom, Statement, Message, Expression
 
-r_token = '"[^"]+"|\\w+|\\d+|\\S'
+r_token = '"[^"]*"|\\w+|\\d+|\\S'
 r_topic = '(\\w+|\$|@|&)$'
 ops2 = "<+*-=%#/^:"
 ops1 = "!"

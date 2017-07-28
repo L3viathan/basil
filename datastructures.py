@@ -65,7 +65,7 @@ class Message:
         self.reply = evaluate(action['reply'], cmessage)
         self.body = evaluate(action['body'], cmessage)
     def __repr__(self):
-        return f"<{self.topic} {self.body} {self.reply}>"
+        return f"{{{self.topic} {self.body!r} {self.reply}}}"
     @classmethod
     def make_main(cls):
         return Message({'topic': Atom('main'), 'reply': Atom(''), 'body': Atom('')})
@@ -109,11 +109,13 @@ class Atom:
 
 class Bag(list):
     """Self-shuffling list"""
-    def __init__(self):
+    def __init__(self, debug=False):
         self.i = 0
         self.c = 0
+        self.debug = debug
     def append(self, element):
-        # print("Adding", element)
+        if self.debug:
+            print(element)
         if element is None:
             assert False
         super().append(element)

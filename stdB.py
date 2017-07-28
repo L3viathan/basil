@@ -5,7 +5,8 @@ from datastructures import Atom, Message
 
 o_accumulate = defaultdict(dict)
 u_accumulate = defaultdict(list)
-i_accumulate = defaultdict(dict)
+holds = dict()
+releases = set()
 
 
 def _stdlib(self, msg):
@@ -13,6 +14,7 @@ def _stdlib(self, msg):
         self.send(msg.reply, "".join(msg.body))
     elif msg.topic % "print":
         print(msg.body)
+        self.send(msg.reply, Atom(""))
     elif msg.topic % "read":
         i = input(msg.body)
         self.send(msg.reply, i)
@@ -25,11 +27,17 @@ def _stdlib(self, msg):
     elif msg.topic % "err":
         print("ERROR:", msg.body, file=sys.stderr)
         sys.exit(1)
-    elif msg.topic % "index":
-        x = msg.body[0]
-        for i in msg.body[1:]:
-            x = x[i]
-        self.send(msg.reply, x)
+    elif msg.topic % "hold":
+        holds[msg.reply] = msg.body
+        if msg.reply in releases:
+            releases.remove(msg.reply)
+            self.send(*holds[msg.reply])
+    elif msg.topic % "release":
+        if msg.body in holds:
+            self.send(*holds[msg.reply])
+            del holds[msg.reply]
+        else:
+            releases.add(msg.body)
     elif msg.topic % 'order':
         ...
     elif msg.topic % 'accu':
@@ -59,6 +67,7 @@ def register(d):
             "int",
             "err",
             "accu",
-            "index",
+            "hold",
+            "release",
             ]:
         d[Atom(topic)].append(_stdlib)
