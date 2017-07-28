@@ -5,6 +5,7 @@ from datastructures import Atom, Message
 
 o_accumulate = defaultdict(dict)
 u_accumulate = defaultdict(list)
+i_accumulate = defaultdict(dict)
 
 
 def _stdlib(self, msg):
@@ -29,6 +30,8 @@ def _stdlib(self, msg):
         for i in msg.body[1:]:
             x = x[i]
         self.send(msg.reply, x)
+    elif msg.topic % 'order':
+        ...
     elif msg.topic % 'accu':
         if len(msg.body) == 2:  # unordered
             element, length = msg.body

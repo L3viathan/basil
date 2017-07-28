@@ -26,6 +26,16 @@ def evaluate(something, cmessage):
             return e1 - e2
         elif op == '*':
             return e1 * e2
+        elif op == '^':
+            return e1 ** e2
+        elif op == '/':
+            return e1 // e2
+        elif op == ':':
+            return e1 / e2
+        elif op == '%':
+            return e1 % e2
+        elif op == '#':
+            return e1[e2]
         elif op == '!':
             return int(not e1)
         elif op == '=':
@@ -109,14 +119,14 @@ class Bag(list):
         super().append(element)
         self.i += 1
         self.c += 1
-        if self.i > self.c and len(self)>2:
+        if self.i > self.c and len(self) > 2:
             # print("Shuffled")
             random.shuffle(self)
             self.i = 0
     def pop(self):
         self.c -= 1
         self.i += 1
-        if self.i > self.c and len(self)>2:
+        if self.i > self.c and len(self) > 2:
             # print("Shuffled")
             random.shuffle(self)
             self.i = 0
