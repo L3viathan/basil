@@ -110,8 +110,6 @@ class Atom:
 class Bag(list):
     """Self-shuffling list"""
     def __init__(self, debug=False):
-        self.i = 0
-        self.c = 0
         self.debug = debug
     def append(self, element):
         if self.debug:
@@ -119,17 +117,7 @@ class Bag(list):
         if element is None:
             assert False
         super().append(element)
-        self.i += 1
-        self.c += 1
-        if self.i > self.c and len(self) > 2:
-            # print("Shuffled")
-            random.shuffle(self)
-            self.i = 0
     def pop(self):
-        self.c -= 1
-        self.i += 1
-        if self.i > self.c and len(self) > 2:
-            # print("Shuffled")
+        if len(self) > 1:
             random.shuffle(self)
-            self.i = 0
         return super().pop()

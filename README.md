@@ -42,6 +42,9 @@ Apart from alphanumerical atoms, there are three special atoms: `@`, `&`, and
 `$`. They refer to the current body, current reply-to and current topic,
 respectively.
 
+The usual operators do what one would expect, and there's one more: `#` is an
+indexing operator, such that `#ab` evaluates to the `b`th element of `a`.
+
 ## Semantics
 
 When a *message* (basically a triplet of topic, body, and reply-to) is being
